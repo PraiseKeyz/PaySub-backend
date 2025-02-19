@@ -4,19 +4,20 @@ const User = require('../model/user');
 
 dotenv.config();
 
-//Login logic...
+//register logic...
 const register = async (req, res) => {
     try {
         const user = new User(req.body);
-        await save(user);
+        await user.save();
 
         const token = jwt.sign(
             { _id: user._id.toString() },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );  
+        const { password: _, ...isWithoutPassword} = user.toObject();
 
-        res.status(401).send( user, token);
+        res.status(201).json({ message: "New account created", user: isWithoutPassword, token});
     }
     catch (error) {
         console.error(error);
@@ -30,18 +31,20 @@ const login = async (req, res) => {
         const user = await User.findOne({ email });
 
         if(!user) {
-            throw new Error('You are not authenticated');
+            throw new Error('Invalid credentials');
         }
-         const isMatch = await user.comparePassword({ password });
+         const isMatch = await user.comparePassword(password);
          if (!isMatch) {
             throw new Error('Password is not correct');
          }
+
+         const { password: _, ...isWithoutPassword } = user.toObject();
          const token = jwt.sign(
             { _id: user._id.toString() },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
-        res.status(201).send({ user, token });
+        res.status(201).json({ message: "Logged in successfully", user: isWithoutPassword, token });
     }
     catch (error) {
         console.error(error);
