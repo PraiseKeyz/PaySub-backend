@@ -54,9 +54,23 @@ const login = async (req, res) => {
 
 //Get user's profile
 const profile = async (req, res) => {
-    const user = await user.find({ username, email, password })
-    res.status(200).send(user);
-}
+    try {
+        // Extract user ID from the authentication middleware (assumed to be set in `req.user`)
+        const userId = req.user.id;
+
+        // Fetch user details, excluding sensitive fields like password
+        const user = await User.findById(userId).select("-password"); 
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json(user);
+    } catch (error) {
+        console.error("Error fetching user profile:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
 
 
 //update user profile
