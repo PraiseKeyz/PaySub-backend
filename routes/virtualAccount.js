@@ -4,8 +4,8 @@ const auth = require('../middlewares/auth')
 const virtualAccount = require('../Controllers/virtualaccount');
 const getVirtualAccount = require('../Controllers/getVirtualAccount');
 
-router.post('./generate-virtualaccount', auth, virtualAccount);
+router.post('/generate-virtualaccount', auth, virtualAccount);
 
-router.get('./virtual-account', auth, getVirtualAccount);
+router.get('/virtual-account', auth, getVirtualAccount);
 
 module.exports = router;
