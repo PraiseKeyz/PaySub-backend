@@ -16,7 +16,7 @@ mongoose.connect(process.env.MONGODB_URI)
 app.use(express.json());
 app.use(cors());
 app.use('/api/v1/auth', authRouter);
-app.use('./api/v1', virtualaccountRouter);
+app.use('/api/v1', virtualaccountRouter);
 
 
 // Error handling middleware
