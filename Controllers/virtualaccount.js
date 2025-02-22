@@ -7,7 +7,7 @@ const virtualAccount = async (req, res) => {
     try {
         // ✅ Extract the authenticated user’s email from req.user
         const userEmail = req.user.email;
-        const { bvn } = req.body
+        const { bvn, phone } = req.body
         if (!userEmail) {
           return res.status(400).json({ error: "User email is required" });
         };
@@ -31,7 +31,8 @@ const virtualAccount = async (req, res) => {
             tx_ref: `txn-${Date.now()}`, // ✅ Unique transaction reference
             is_permanent: true,
             bvn, // Add the BVN here
-            fullname: req.user.firstname,
+            phone,
+            fullname: req.user.fullname,
             narration: `Please make a bank transfer to ${req.user.username}`,
           },
         };
