@@ -7,7 +7,8 @@ const virtualAccount = async (req, res) => {
     try {
         // ✅ Extract the authenticated user’s email from req.user
         const userEmail = req.user.email;
-        const { bvn, phone } = req.body
+        const userPhone = req.user.phone;
+        const { bvn } = req.body
         if (!userEmail) {
           return res.status(400).json({ error: "User email is required" });
         };
@@ -15,6 +16,10 @@ const virtualAccount = async (req, res) => {
         if (!bvn) {
             return res.status(400).json({error: "BVN is required"});
         }
+
+    if (!userPhone) {
+      return res.status(400).json({ error: "Phone number is required" });
+    }
     
         // ✅ Define the Flutterwave API request
         const options = {
@@ -31,9 +36,9 @@ const virtualAccount = async (req, res) => {
             tx_ref: `txn-${Date.now()}`, // ✅ Unique transaction reference
             is_permanent: true,
             bvn, // Add the BVN here
-            phone,
+            phone: userPhone,
             fullname: req.user.fullname,
-            narration: `Please make a bank transfer to ${req.user.username}`,
+            narration: `${req.user.fullname}`,
           },
         };
     
@@ -45,12 +50,13 @@ const virtualAccount = async (req, res) => {
          if(!virtualAccountData) {
             return res.status(400).json({error: "Failed to generate a virtual account"})
          }
-
          req.user.virtualAccount = {
+            accountName: virtualAccountData.narration,
             accountNumber: virtualAccountData.account_number,
             bankName: virtualAccountData.bank_name,
             reference: virtualAccountData.flw_ref,
-            accountAmount: virtualAccountData.amount
+            accountAmount: virtualAccountData.amount,
+            orderRef: virtualAccountData.order_ref
          }
 
          await req.user.save();

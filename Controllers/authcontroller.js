@@ -59,7 +59,7 @@ const profile = async (req, res) => {
         const userId = req.user.id;
 
         // Fetch user details, excluding sensitive fields like password
-        const user = await User.findById(userId).select("-password"); 
+        const user = await User.findById(userId).select("-password");
 
         if (!user) {
             return res.status(404).json({ message: "User not found" });

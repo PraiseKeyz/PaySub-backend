@@ -29,6 +29,14 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         minlength: 6,
+    },
+    virtualAccount: {
+        accountName: { type: String, default: "" },
+        accountNumber: { type: String, default: "" },
+        bankName: { type: String, default: "" },
+        reference: { type: String, default: "" },
+        orderRef: { type: String, default: "" },
+        accountAmount: { type: Number, default: 0.00 }
     }
 }, {
     timestamps: true
