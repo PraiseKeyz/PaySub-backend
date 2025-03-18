@@ -5,6 +5,10 @@ require('dotenv').config();
 
 const authRouter = require('./routes/auth');
 const virtualaccountRouter = require('./routes/virtualAccount');
+const dataPlans = require('./routes/dataplans');
+const webhookRouter = require('./routes/webhookRoute');
+const transactionRoute = require('./routes/transactionRoute');
+const cableRoute = require('./routes/cableSubscriptionRoute');
 const app = express();
 
 // Connect to MongoDB
@@ -17,6 +21,11 @@ app.use(express.json());
 app.use(cors());
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1', virtualaccountRouter);
+app.use('/api/v1', dataPlans);
+app.use('/api/v1', webhookRouter);
+app.use('/api/v1', transactionRoute);
+app.use('/api/vi', cableRoute);
+
 
 
 // Error handling middleware
