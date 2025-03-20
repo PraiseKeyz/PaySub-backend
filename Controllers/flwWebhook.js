@@ -16,7 +16,8 @@ const transaction = async (req, res) => {
         }
 
         // Extract webhook data
-        const { status, amount, account_id, flw_ref, tx_ref } = req.body;
+        const { status, amount, id, fee, reference } = req.body.data;
+        const accountNumber = req.body.data.account_number;
         
         if (status !== "successful") {
             console.log("Transaction not successful:", status);
@@ -24,15 +25,15 @@ const transaction = async (req, res) => {
         }
 
         // Find user by virtual account ID
-        const user = await User.findOne({ virtualAccount: account_id });
+        const user = await User.findOne({ "virtualAccount.accountNumber": accountNumber });
 
         if (!user) {
-            console.log("User not found for account ID:", account_id);
+            console.log("User not found for account ID:", accountNumber);
             return res.status(404).json({ message: "User not found" });
         }
 
         // Update user's balance
-        user.accountAmount += amount;
+        user.virtualAccount.accountAmount += amount;
         await user.save();
 
         // Log transaction
@@ -40,9 +41,10 @@ const transaction = async (req, res) => {
             user: user._id,
             type: "deposit",
             amount,
-            status: "successful",
-            reference: tx_ref,
-            flutterwaveReference: flw_ref
+            id: id,
+            status: status,
+            reference: reference,
+            fee: fee,
         });
 
         console.log("Wallet funded successfully for user:", user._id);
