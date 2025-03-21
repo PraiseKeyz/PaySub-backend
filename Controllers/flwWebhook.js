@@ -4,7 +4,7 @@ require('dotenv').config();
 
 const transaction = async (req, res) => {
     try {
-        console.log("Received Webhook:", req.body); // Log incoming request
+        console.log("Received Webhook:", JSON.stringify(req.body, null, 2)); // Log the full webhook for debugging
 
         // Verify Secret Hash
         const secretHash = process.env.FLW_SECRET_HASH;
@@ -15,36 +15,42 @@ const transaction = async (req, res) => {
             return res.status(401).json({ message: "Unauthorized webhook request" });
         }
 
+        // Ensure it's a bank transfer event
+        if (req.body.event.type !== "BANK_TRANSFER_TRANSACTION") {
+            console.log("Ignoring non-bank transfer event:", req.body.event);
+            return res.status(400).json({ message: "Invalid event type" });
+        }
+
         // Extract webhook data
-        const { status, amount, id, fee, reference } = req.body.data;
-        const accountNumber = req.body.data.account_number;
+        const { status, charged_amount, id, app_fee, tx_ref, customer } = req.body.data;
         
-        if (status !== "successful") {
+        if (status.toLowerCase() !== "successful") {
             console.log("Transaction not successful:", status);
             return res.status(400).json({ message: "Transaction not successful" });
         }
 
-        // Find user by virtual account ID
-        const user = await User.findOne({ "virtualAccount.accountNumber": accountNumber });
+        // Find user by email (since account number is not in the webhook)
+        const user = await User.findOne({ "email": customer.email });
 
         if (!user) {
-            console.log("User not found for account ID:", accountNumber);
+            console.log("User not found for email:", customer.email);
             return res.status(404).json({ message: "User not found" });
         }
 
         // Update user's balance
-        user.virtualAccount.accountAmount += amount;
+        const amountToCredit = charged_amount - app_fee;
+        user.virtualAccount.accountAmount += amountToCredit;
         await user.save();
 
         // Log transaction
         await Transaction.create({
             user: user._id,
             type: "deposit",
-            amount,
-            id: id,
-            status: status,
-            reference: reference,
-            fee: fee,
+            amount: amountToCredit,
+            id,
+            status,
+            reference: tx_ref,
+            fee: app_fee,
         });
 
         console.log("Wallet funded successfully for user:", user._id);
