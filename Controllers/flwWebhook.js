@@ -22,7 +22,7 @@ const transaction = async (req, res) => {
         }
 
         // Extract webhook data
-        const { status, charged_amount, id, app_fee, tx_ref, customer } = req.body.data;
+        const { status, charged_amount, id, app_fee, tx_ref, customer, flw_ref } = req.body.data;
         
         if (status.toLowerCase() !== "successful") {
             console.log("Transaction not successful:", status);
@@ -50,7 +50,9 @@ const transaction = async (req, res) => {
             id,
             status,
             reference: tx_ref,
+            flw_ref,
             fee: app_fee,
+            charged_amount
         });
 
         console.log("Wallet funded successfully for user:", user._id);
