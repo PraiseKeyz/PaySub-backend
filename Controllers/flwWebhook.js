@@ -17,7 +17,7 @@ const transaction = async (req, res) => {
 
         // Ensure it's a bank transfer event
         if (req.body["event.type"] !== "BANK_TRANSFER_TRANSACTION") {
-            console.log("Ignoring non-bank transfer event:", req.body.event);
+            console.log("Ignoring non-bank transfer event:", req.body["event.type"]);
             return res.status(400).json({ message: "Invalid event type" });
         }
 
