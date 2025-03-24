@@ -39,6 +39,7 @@ const transaction = async (req, res) => {
 
         // Update user's balance
         const amountToCredit = charged_amount - app_fee;
+        console.log(amountToCredit);
         user.virtualAccount.accountAmount += amountToCredit;
         await user.save();
 
@@ -64,4 +65,54 @@ const transaction = async (req, res) => {
     }
 };
 
-module.exports = transaction;
+const purchaseWebhook = async (req, res) => {
+    try {
+      console.log("Received Webhook:", JSON.stringify(req.body, null, 2));
+  
+      const { reference, status } = req.body;
+  
+      if (!reference || !status) {
+        return res.status(400).json({ error: "Invalid webhook data" });
+      }
+  
+      // Find the transaction by reference
+      const transaction = await Transaction.findOne({ reference });
+  
+      if (!transaction) {
+        return res.status(404).json({ error: "Transaction not found" });
+      }
+  
+      // If transaction is already successful, ignore
+      if (transaction.status === "successful") {
+        return res.status(200).json({ message: "Transaction already processed" });
+      }
+      const updatedStatus = status === "success" ? "successful" : "failed";
+  
+      // If successful, update status and deduct balance
+      if (updatedStatus === "successful") {
+        const user = await User.findById(transaction.user);
+  
+        if (!user) {
+          return res.status(404).json({ error: "User not found" });
+        }
+  
+        // Deduct from user's wallet
+        user.virtualAccount.accountAmount -= transaction.amount;
+        await user.save();
+  
+        // Update transaction status
+        transaction.status = updatedStatus;
+        await transaction.save();
+      }
+      await transaction.save();
+  
+      res.status(200).json({ message: "Webhook processed successfully" });
+  
+    } catch (error) {
+      console.error("Error processing webhook:", error);
+      res.status(500).json({ error: "Webhook processing failed" });
+    }
+  };
+  
+
+module.exports = {transaction, purchaseWebhook};

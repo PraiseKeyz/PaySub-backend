@@ -9,6 +9,7 @@ const dataPlans = require('./routes/dataplans');
 const webhookRouter = require('./routes/webhookRoute');
 const transactionRoute = require('./routes/transactionRoute');
 const cableRoute = require('./routes/cableSubscriptionRoute');
+const airtimePurchase = require('./routes/airtimeRoute');
 const app = express();
 
 // Connect to MongoDB
@@ -24,7 +25,8 @@ app.use('/api/v1', virtualaccountRouter);
 app.use('/api/v1', dataPlans);
 app.use('/api/v1', webhookRouter);
 app.use('/api/v1', transactionRoute);
-app.use('/api/vi', cableRoute);
+app.use('/api/v1', cableRoute);
+app.use('/api/v1', airtimePurchase);
 
 
 
