@@ -18,7 +18,7 @@ const dataPlans = async (req, res) => {
     const config = {
       method: "get",
       maxBodyLength: Infinity,
-      url: "https://isquaredata.com/api/data/plans/",
+      url: "https://isquaredata.com/api/data/services/",
       headers: {
         "Authorization": authHeader
       }
