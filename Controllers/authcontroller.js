@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const User = require('../model/user');
+const nodemailer = require('nodemailer');
 
 dotenv.config();
 
@@ -93,4 +94,81 @@ const update = async (req,res) => {
 }; 
 
 
-module.exports = { register, login, profile, update }
+const sendResetEmail = async (to, link) => {
+    const transporter = nodemailer.createTransport({
+        service: "Gmail",
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+        }
+    });
+
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to,
+        subject: "Password Reset Request",
+        html: `<p>Click <a href="${link}">here</a> to reset your password. The link expires in 1 hour.</p>`
+    };
+
+    await transporter.sendMail(mailOptions);
+};
+
+// Forget password logic
+const forgotPassword = async (req, res) => {
+    try {
+        const {email} = req.body;
+        if (!email) {
+            return res.status(400).json({ message: "Email is required" });
+        }
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+    
+        const resetToken = jwt.sign({email}, process.env.JWT_SECRET, {expiresIn: '1h'});
+    
+        const resetLink = `https://pay-sub.vercel.app/reset-password?token=${resetToken}`;
+    
+        await sendResetEmail(user.email, resetLink);
+    
+        res.status(200).json({ message: "Password reset link sent to your email"})
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+}
+
+const resetPassword = async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+        if (!token || !newPassword) {
+            return res.status(400).json({ message: "All fields are required" });
+        }
+
+        // Verify the JWT token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (!decoded.email) {
+            return res.status(400).json({ message: "Invalid token" });
+        }
+
+        // Find user by email
+        const user = await User.findOne({ email: decoded.email });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Update password
+        user.password = newPassword;
+        await user.save();
+
+        res.status(200).json({ message: "Password reset successful" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Invalid or expired token" });
+    }
+};
+
+
+
+module.exports = { register, login, profile, update, forgotPassword, resetPassword }
