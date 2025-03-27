@@ -1,7 +1,8 @@
 const axios = require('axios');
+const Transaction = require('../model/transaction');
 require("dotenv").config();
 
-const airtimeRecharge = async (res, req) => {
+const airtimeRecharge = async (req, res) => {
     try {
         const { network, amount, phoneNumber } = req.body;
         if ( !network || !amount || !phoneNumber ) {
@@ -43,9 +44,8 @@ const airtimeRecharge = async (res, req) => {
 
           const newTransaction = new Transaction({
             user: user._id,
-            type: "data",
+            type: "airtime",
             reference: reference,
-            plan: planId,
             amount: amount,
             phoneNumber: phoneNumber,
             status: "pending"
